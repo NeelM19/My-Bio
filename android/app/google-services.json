@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "869441481795",
+    "project_id": "mybio-neel19",
+    "storage_bucket": "mybio-neel19.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:869441481795:android:a1813da5b2f85c135bb8f6",
+        "android_client_info": {
+          "package_name": "com.example.my_bio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8nzaVzPoAofFUm6FFXBHeKMac3chMeHk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
