@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../services/storage/preferences_service.dart';
+import '../../services/analytics/analytics_service.dart';
 import '../bio/bio_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -12,10 +13,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _userName = '';
+  final AnalyticsService _analyticsService = AnalyticsService();
 
   @override
   void initState() {
     super.initState();
+    _analyticsService.logScreenView('Home_Screen');
     _loadUserData();
   }
 

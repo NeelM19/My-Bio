@@ -5,7 +5,10 @@ import '../../widgets/auth/custom_button.dart';
 import '../../widgets/auth/social_login_button.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/storage/preferences_service.dart';
-import '../home/home_screen.dart';
+import '../../services/analytics/analytics_service.dart';
+
+import 'signup_screen.dart';
+import '../../screens/greeting_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +21,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
+  final AnalyticsService _analyticsService = AnalyticsService();
+
+  @override
+  void initState() {
+    super.initState();
+    _analyticsService.logScreenView('Login_Screen');
+  }
 
   bool _isLoading = false;
   bool _isGoogleLoading = false;
@@ -119,9 +129,11 @@ class _LoginScreenState extends State<LoginScreen> {
     await prefs.setFirstTimeUser(true);
 
     if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const GreetingScreen()),
+        );
+      }
     }
   }
 
@@ -267,6 +279,33 @@ class _LoginScreenState extends State<LoginScreen> {
                               label: 'Sign in with\nApple',
                               onPressed: _handleAppleSignIn,
                             ),
+                    ],
+                  ),
+                  const SizedBox(height: 40),
+                  // Sign Up Link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Don't have an account? ",
+                        style: TextStyle(color: AppColors.secondaryText),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SignupScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Sign Up',
+                          style: TextStyle(
+                            color: AppColors.gradientStart,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 40),

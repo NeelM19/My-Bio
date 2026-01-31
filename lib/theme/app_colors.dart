@@ -24,4 +24,10 @@ class AppColors {
 
   // Social button background
   static const Color socialButtonBg = Color(0xFF2A2A2A);
+
+  // Neon Accents
+  static const Color neonCyan = Color(0xFF00FFFF);
+  static const Color neonPurple = Color(0xFFBC13FE);
+  static const Color glassBorder = Color(0x33FFFFFF);
+  static const Color blueAccent = Color(0xFF448AFF);
 }
