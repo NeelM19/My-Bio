@@ -7,18 +7,26 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:869441481795:android:a1813da5b2f85c135bb8f6",
+        "mobilesdk_app_id": "1:869441481795:android:405b4ca359ead7c25bb8f6",
         "android_client_info": {
-          "package_name": "com.example.my_bio"
+          "package_name": "com.folyo.neelbio"
         }
       },
       "oauth_client": [
         {
-          "client_id": "869441481795-sh8ic0u4tm0q9h93mirec8h36okuqc9c.apps.googleusercontent.com",
+          "client_id": "869441481795-0efhd3ufu4f7onb0eq53okt4hvuq5l5g.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.my_bio",
+            "package_name": "com.folyo.neelbio",
             "certificate_hash": "59429c4d3536406a42df1649faa2257822c4d476"
+          }
+        },
+        {
+          "client_id": "869441481795-np7ce4epicvsm1lm1n3rn6rfq0a2tqtc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.folyo.neelbio",
+            "certificate_hash": "52e7acaf6442f49df0ec5d93f09708e469a62093"
           }
         },
         {

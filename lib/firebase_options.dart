@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyC8nzaVzPoAofFUm6FFXBHeKMac3chMeHk',
-    appId: '1:869441481795:android:a1813da5b2f85c135bb8f6',
+    appId: '1:869441481795:android:405b4ca359ead7c25bb8f6',
     messagingSenderId: '869441481795',
     projectId: 'mybio-neel19',
     storageBucket: 'mybio-neel19.firebasestorage.app',
@@ -59,10 +59,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyATKGBHW-7ywRITVH_CU2ATM6yvMHDXvb4',
-    appId: '1:869441481795:ios:3c7df01cccf4e2e85bb8f6',
+    appId: '1:869441481795:ios:31d64e6fcd0f192f5bb8f6',
     messagingSenderId: '869441481795',
     projectId: 'mybio-neel19',
     storageBucket: 'mybio-neel19.firebasestorage.app',
-    iosBundleId: 'com.example.myBio',
+    androidClientId: '869441481795-sh8ic0u4tm0q9h93mirec8h36okuqc9c.apps.googleusercontent.com',
+    iosClientId: '869441481795-ledradrughkn3vo87n863t0j1bcoigau.apps.googleusercontent.com',
+    iosBundleId: 'com.folyo.neelbio',
   );
 }

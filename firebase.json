@@ -4,7 +4,7 @@
             "android": {
                 "default": {
                     "projectId": "mybio-neel19",
-                    "appId": "1:869441481795:android:a1813da5b2f85c135bb8f6",
+                    "appId": "1:869441481795:android:405b4ca359ead7c25bb8f6",
                     "fileOutput": "android/app/google-services.json"
                 }
             },
@@ -12,8 +12,8 @@
                 "lib/firebase_options.dart": {
                     "projectId": "mybio-neel19",
                     "configurations": {
-                        "android": "1:869441481795:android:a1813da5b2f85c135bb8f6",
-                        "ios": "1:869441481795:ios:3c7df01cccf4e2e85bb8f6"
+                        "android": "1:869441481795:android:405b4ca359ead7c25bb8f6",
+                        "ios": "1:869441481795:ios:31d64e6fcd0f192f5bb8f6"
                     }
                 }
             }
