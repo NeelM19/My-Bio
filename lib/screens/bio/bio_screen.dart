@@ -12,6 +12,8 @@ import '../../services/storage/preferences_service.dart';
 import '../auth/login_screen.dart';
 
 import '../../services/voice_greeting_service.dart';
+import '../../services/resume_service.dart';
+import '../../services/notification_service.dart';
 
 import '../../data/voice_scripts.dart';
 
@@ -32,6 +34,8 @@ class _BioScreenState extends State<BioScreen> {
   final AnalyticsService _analyticsService = AnalyticsService();
   final AuthService _authService = AuthService();
   final VoiceGreetingService _voiceService = VoiceGreetingService();
+  final ResumeService _resumeService = ResumeService();
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
@@ -46,6 +50,7 @@ class _BioScreenState extends State<BioScreen> {
       _voiceService.prefetchAll(VoiceScripts.getAllScripts());
       _playVoiceForPage(0);
     }
+    _notificationService.init();
   }
 
   void _playVoiceForPage(int pageIndex) {
@@ -634,20 +639,45 @@ class _BioScreenState extends State<BioScreen> {
               Icons.email,
               ResumeData.email,
               () => _launchUrl("mailto:${ResumeData.email}"),
+              fontSize: 14,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: _buildContactItem(
+                    Icons.phone,
+                    ResumeData.phone,
+                    () => _launchUrl("tel:${ResumeData.phone}"),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 16,
+                    ),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildContactItem(
+                    Icons.link,
+                    "LinkedIn",
+                    () => _launchUrl(ResumeData.linkedin),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 16,
+                    ),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             _buildContactItem(
-              Icons.phone,
-              ResumeData.phone,
-              () => _launchUrl("tel:${ResumeData.phone}"),
-            ),
-            const SizedBox(height: 24),
-            _buildContactItem(Icons.location_on, ResumeData.location, () {}),
-            const SizedBox(height: 24),
-            _buildContactItem(
-              Icons.link,
-              "LinkedIn",
-              () => _launchUrl(ResumeData.linkedin),
+              Icons.location_on,
+              ResumeData.location,
+              () {},
+              fontSize: 14,
             ),
             const SizedBox(height: 48),
             NeonButton(
@@ -668,25 +698,79 @@ class _BioScreenState extends State<BioScreen> {
               },
               baseColor: AppColors.neonPurple,
             ),
+            const SizedBox(height: 24),
+            NeonButton(
+              text: "Download Resume",
+              onPressed: () async {
+                try {
+                  final String fileName = await _resumeService.downloadResume();
+                  await _notificationService.showDownloadSuccessNotification(
+                    fileName,
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        duration: const Duration(seconds: 2),
+                        content: const Text(
+                          'Resume downloaded successfully! Check your Downloads folder.',
+                        ),
+                        backgroundColor: Colors.green,
+                        action: SnackBarAction(
+                          label: 'OPEN',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            _resumeService.openResume(fileName);
+                          },
+                        ),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to download resume: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              baseColor: AppColors.neonCyan,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildContactItem(IconData icon, String text, VoidCallback onTap) {
+  Widget _buildContactItem(
+    IconData icon,
+    String text,
+    VoidCallback onTap, {
+    EdgeInsetsGeometry? padding,
+    double fontSize = 18,
+  }) {
     return InkWell(
       onTap: onTap,
       child: GlassContainer(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding:
+            padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppColors.neonCyan),
-            const SizedBox(width: 16),
-            Text(
-              text,
-              style: GoogleFonts.exo2(color: Colors.white, fontSize: 18),
+            Icon(icon, color: AppColors.neonCyan, size: fontSize + 4),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                text,
+                style: GoogleFonts.exo2(
+                  color: Colors.white,
+                  fontSize: fontSize,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
