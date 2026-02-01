@@ -1,78 +1,167 @@
-import 'dart:convert';
-import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:just_audio/just_audio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:path_provider/path_provider.dart';
-import '../data/resume_data.dart';
+// import 'package:http/http.dart' as http;
+// import 'package:just_audio/just_audio.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class VoiceGreetingService {
   static final VoiceGreetingService _instance =
       VoiceGreetingService._internal();
   factory VoiceGreetingService() => _instance;
-  VoiceGreetingService._internal();
 
-  final AudioPlayer _player = AudioPlayer();
-  // Rachel voice ID
-  final String _voiceId = "hpp4J3VqNfWAUOO0d1Us";
-  // Model ID for low latency
-  // Model ID for low latency
-  final String _modelId = "eleven_flash_v2_5";
+  // final AudioPlayer _player = AudioPlayer();
+  // // Rachel voice ID
+  // final String _voiceId = "hpp4J3VqNfWAUOO0d1Us";
+  // // Model ID for low latency
+  // final String _modelId = "eleven_flash_v2_5";
 
-  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+  // // Cache for file paths: key -> filePath
+  // final Map<String, String> _audioCache = {};
 
-  Future<void> greetUser(String name) async {
+  final FlutterTts _flutterTts = FlutterTts();
+  Map<String, String> _scripts = {};
+  final StreamController<bool> _playingStateController =
+      StreamController<bool>.broadcast();
+
+  // Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+  Stream<bool> get isPlayingStream => _playingStateController.stream;
+
+  VoiceGreetingService._internal() {
+    _initTts();
+  }
+
+  Future<void> _initTts() async {
     try {
-      final apiKey = dotenv.env['ELEVEN_LAB_KEY'];
-      if (apiKey == null || apiKey.isEmpty) {
-        debugPrint('ElevenLabs API Key is missing in .env');
-        return;
-      }
+      await _flutterTts.setLanguage("en-US");
+      await _flutterTts.setSpeechRate(0.5);
+      await _flutterTts.setPitch(1.0);
 
-      final url = Uri.parse(
-        'https://api.elevenlabs.io/v1/text-to-speech/$_voiceId',
-      );
+      _flutterTts.setStartHandler(() {
+        _playingStateController.add(true);
+      });
 
-      final response = await http.post(
-        url,
-        headers: {'xi-api-key': apiKey, 'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "text":
-              "Hello $name. Welcome to Folyo. I'm the AI assistant for ${ResumeData.name}, a mobile app developer. Feel free to explore his projects.",
-          "model_id": _modelId,
-          "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
-        }),
-      );
+      _flutterTts.setCompletionHandler(() {
+        _playingStateController.add(false);
+      });
 
-      if (response.statusCode == 200) {
-        // Save the audio to a temporary file
-        final directory = await getTemporaryDirectory();
-        final filePath = '${directory.path}/greeting.mp3';
-        final file = File(filePath);
-        await file.writeAsBytes(response.bodyBytes);
+      _flutterTts.setCancelHandler(() {
+        _playingStateController.add(false);
+      });
 
-        // Play the audio
-        await _player.setFilePath(filePath);
-        // We handle playing, but maybe we want to await completion or just start it?
-        // The requirement says "greet users on login". It implies playing it.
-        // We'll play it.
-        await _player.play();
-      } else {
-        debugPrint(
-          'ElevenLabs API Error: ${response.statusCode} - ${response.body}',
-        );
-      }
+      _flutterTts.setErrorHandler((msg) {
+        _playingStateController.add(false);
+        debugPrint("TTS Error: $msg");
+      });
     } catch (e) {
-      debugPrint('Error generating greeting: $e');
+      debugPrint("TTS Init Error: $e");
     }
   }
 
+  /// Prefetch all audio files in the background - Refactored to just store scripts
+  Future<void> prefetchAll(Map<String, String> scripts) async {
+    _scripts = scripts;
+    // Old implementation commented out:
+    /*
+    final directory = await getTemporaryDirectory();
+    final apiKey = dotenv.env['ELEVEN_LAB_KEY'];
+
+    if (apiKey == null || apiKey.isEmpty) {
+      debugPrint('ElevenLabs API Key is missing');
+      return;
+    }
+
+    for (var entry in scripts.entries) {
+      final key = entry.key;
+      final text = entry.value;
+      final filePath = '${directory.path}/greeting_$key.mp3';
+      final file = File(filePath);
+
+      // Check if already cached in memory
+      if (_audioCache.containsKey(key)) continue;
+
+      // Check if file exists on disk
+      if (await file.exists()) {
+        _audioCache[key] = filePath;
+        continue;
+      }
+
+      // Generate if not found
+      try {
+        await _generateAndSave(text, filePath, apiKey);
+        _audioCache[key] = filePath;
+      } catch (e) {
+        debugPrint('Error generating audio for $key: $e');
+      }
+    }
+    */
+  }
+
+  /// Play audio by key
+  Future<void> play(String key) async {
+    try {
+      final text = _scripts[key];
+      if (text == null) {
+        debugPrint("No script found for key: $key");
+        return;
+      }
+
+      await _flutterTts.speak(text);
+
+      // Old implementation:
+      /*
+      final filePath = _audioCache[key];
+      if (filePath == null) {
+        debugPrint('Audio not found for key: $key');
+        return;
+      }
+
+      await _player.setFilePath(filePath);
+      await _player.play();
+      */
+    } catch (e) {
+      debugPrint('Error playing audio for $key: $e');
+    }
+  }
+
+  /// Generate and save audio file
+  // Future<void> _generateAndSave(
+  //   String text,
+  //   String filePath,
+  //   String apiKey,
+  // ) async {
+  //   final url = Uri.parse(
+  //     'https://api.elevenlabs.io/v1/text-to-speech/$_voiceId',
+  //   );
+  //
+  //   final response = await http.post(
+  //     url,
+  //     headers: {'xi-api-key': apiKey, 'Content-Type': 'application/json'},
+  //     body: jsonEncode({
+  //       "text": text,
+  //       "model_id": _modelId,
+  //       "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
+  //     }),
+  //   );
+  //
+  //   if (response.statusCode == 200) {
+  //     final file = File(filePath);
+  //     await file.writeAsBytes(response.bodyBytes);
+  //   } else {
+  //     throw Exception(
+  //       'ElevenLabs API Error: ${response.statusCode} - ${response.body}',
+  //     );
+  //   }
+  // }
+
   Future<void> stop() async {
-    await _player.stop();
+    await _flutterTts.stop();
+    // await _player.stop();
   }
 
   Future<void> dispose() async {
-    await _player.dispose();
+    await _flutterTts.stop();
+    _playingStateController.close();
+    // await _player.dispose();
   }
 }

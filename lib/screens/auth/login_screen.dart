@@ -4,11 +4,12 @@ import '../../widgets/auth/custom_text_field.dart';
 import '../../widgets/auth/custom_button.dart';
 import '../../widgets/auth/social_login_button.dart';
 import '../../services/auth/auth_service.dart';
-import '../../services/storage/preferences_service.dart';
+
 import '../../services/analytics/analytics_service.dart';
 
 import 'signup_screen.dart';
 import '../../screens/greeting_screen.dart';
+import '../../screens/bio/bio_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -124,16 +125,23 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _navigateToHome() async {
-    // Mark as first-time user so they see the welcome home screen
-    final prefs = await PreferencesService.getInstance();
-    await prefs.setFirstTimeUser(true);
+    final user = _authService.currentUser;
+    bool hasSeenIntro = false;
 
-    if (mounted) {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const GreetingScreen()),
-        );
-      }
+    if (user != null) {
+      hasSeenIntro = await _authService.checkIfUserHasSeenIntro(user.uid);
+    }
+
+    if (!mounted) return;
+
+    if (!hasSeenIntro) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const GreetingScreen()),
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const BioScreen()),
+      );
     }
   }
 

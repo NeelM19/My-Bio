@@ -13,7 +13,10 @@ class CustomTextField extends StatefulWidget {
     this.isPassword = false,
     this.controller,
     this.icon,
+    this.keyboardType,
   });
+
+  final TextInputType? keyboardType;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -39,6 +42,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       child: TextField(
         controller: widget.controller,
         obscureText: _obscureText,
+        keyboardType: widget.keyboardType,
         style: const TextStyle(color: AppColors.primaryText, fontSize: 16),
         decoration: InputDecoration(
           hintText: widget.hintText,

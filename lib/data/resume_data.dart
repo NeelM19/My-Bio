@@ -4,7 +4,7 @@ class ResumeData {
   static const String email = "neelmodi1901@gmail.com";
   static const String phone = "9979613864";
   static const String location = "Hubli, Karnataka";
-  static const String linkedin = "neelmodi19"; // Assuming this is the handle
+  static const String linkedin = "https://www.linkedin.com/in/neelmodi19/";
 
   static const String summary =
       "Software Engineer with 2.5+ years of experience specializing in Flutter, Dart, and cross-platform mobile app development. Skilled in building scalable applications, optimizing performance, and delivering intuitive UI/UX. Experienced in Robotic Process Automation (RPA) using Microsoft Power Automate and PowerApps. Adept at collaborating with cross-functional teams and delivering solutions that reduce costs and improve efficiency.";

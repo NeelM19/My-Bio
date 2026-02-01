@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:folyo/services/storage/preferences_service.dart';
-import 'package:just_audio/just_audio.dart'; // Import just_audio for PlayerState
+// import 'package:just_audio/just_audio.dart';
 import 'package:folyo/screens/bio/bio_screen.dart';
 import '../services/analytics/analytics_service.dart';
 import '../services/voice_greeting_service.dart';
 import '../widgets/auth/custom_button.dart';
 import '../theme/app_colors.dart';
 import '../widgets/voice_wave_animation.dart';
+import '../data/voice_scripts.dart';
+import '../services/auth/auth_service.dart';
 
 class GreetingScreen extends StatefulWidget {
   const GreetingScreen({super.key});
@@ -19,42 +21,62 @@ class GreetingScreen extends StatefulWidget {
 class _GreetingScreenState extends State<GreetingScreen> {
   final VoiceGreetingService _voiceService = VoiceGreetingService();
   final AnalyticsService _analyticsService = AnalyticsService();
+  final AuthService _authService = AuthService();
   String _userName = "User";
 
   @override
   void initState() {
     super.initState();
     _analyticsService.logScreenView('Greeting_Screen');
-    _playGreeting();
+    _loadUserName();
+    _initializeVoiceAndPlay();
   }
 
-  Future<void> _playGreeting() async {
+  void _loadUserName() {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      _userName = user.displayName ?? "User";
-      // If display name is empty (common in email login until profile updated), use "User"
-      if (_userName.isEmpty) _userName = "User";
+      setState(() {
+        _userName = user.displayName ?? "User";
+        if (_userName.isEmpty) _userName = "User";
+      });
     }
+  }
 
-    // Extract first name for a friendlier greeting
+  Future<void> _initializeVoiceAndPlay() async {
+    // 1. Prefetch all scripts with personalized greeting
+    // Use the first name for a friendlier greeting
     final firstName = _userName.split(' ').first;
+    final scripts = VoiceScripts.getAllScripts(userName: firstName);
+    await _voiceService.prefetchAll(scripts);
 
-    await _voiceService.greetUser(firstName);
+    // 2. Play greeting
+    await _voiceService.play('greeting');
   }
 
   @override
   void dispose() {
-    _voiceService.stop();
+    // _voiceService.stop(); // Don't stop here, let it continue to BioScreen
     super.dispose();
   }
 
-  Future<void> _navigateToHome() async {
+  Future<void> _navigateToBio() async {
+    // Mark user as having seen intro in Firestore
+    final user = _authService.currentUser;
+    if (user != null) {
+      await _authService.markUserAsSeenIntro(user.uid);
+    }
+
+    // Also update local prefs
     final prefs = await PreferencesService.getInstance();
     await prefs.setFirstTimeUser(false);
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const BioScreen()),
-    );
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const BioScreen(playVoice: true),
+        ),
+      );
+    }
   }
 
   @override
@@ -72,18 +94,15 @@ class _GreetingScreenState extends State<GreetingScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: StreamBuilder<PlayerState>(
-              stream: _voiceService.playerStateStream,
+            child: StreamBuilder<bool>(
+              stream: _voiceService.isPlayingStream,
               builder: (context, snapshot) {
-                final playerState = snapshot.data;
-                final processingState = playerState?.processingState;
-                final playing = playerState?.playing ?? false;
+                final isPlaying = snapshot.data ?? false;
 
                 // Show animation if buffering or playing (intent to play is true and not completed)
-                // Note: when finished, processingState is completed.
-                final isPlaying =
-                    playing && processingState != ProcessingState.completed;
-                final isFinished = processingState == ProcessingState.completed;
+                // final isPlaying =
+                //    playing && processingState != ProcessingState.completed;
+                // final isFinished = processingState == ProcessingState.completed;
 
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -110,20 +129,14 @@ class _GreetingScreenState extends State<GreetingScreen> {
                       ),
                     ),
                     const SizedBox(height: 60),
-                    // Show button only if playback finished or not playing (initial state might be idle)
-                    // But we want to hide it initially while it loads.
-                    // If processingState is null (loading), hide.
-                    // If processingState is idle (initial), hide or show? Logic: auto-play starts immediately.
-                    // Let's hide until completed.
-                    if (isFinished)
+                    // Show button when finished or at least initialized logic allows
+                    if (!isPlaying)
                       CustomButton(
                         text: 'START EXPLORING',
-                        onPressed: _navigateToHome,
+                        onPressed: _navigateToBio,
                       )
                     else
-                      const SizedBox(
-                        height: 56,
-                      ), // Placeholder for button height
+                      const SizedBox(height: 56),
                   ],
                 );
               },

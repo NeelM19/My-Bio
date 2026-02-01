@@ -48,13 +48,10 @@ dependencies:
   flutter_dotenv: ^5.1.0
   path_provider: ^2.1.1
   just_audio: ^0.9.36
-  http: ^1.2.0 # Adding http as a fallback or requirement for agents
-  # elevenlabs_agents: ^0.0.1 # Assuming this is the package user wants, avoiding version constraint if unknown or using a safe one. 
-  # Actually, since I am not sure if 'elevenlabs_agents' is on pub.dev, and the user said "Add elevenlabs_agents", I'll add it. 
-  # However, standard practice if unsure is to check. I will use 'http' for the service implementation as a robust fallback if 'elevenlabs_agents' is not standard.
-  # But I must follow instructions. I'll add 'http' as well just in case.
-  # Let's try adding it without version to get latest or fail if not found.
-  elevenlabs_agents: any
+  http: ^1.2.0
+  # elevenlabs_agents: any
+  flutter_tts: ^4.1.0
+  cloud_firestore: ^6.1.2
 
 dev_dependencies:
   flutter_test:

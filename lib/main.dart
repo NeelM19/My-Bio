@@ -5,10 +5,11 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'screens/auth/login_screen.dart';
-import 'screens/home/home_screen.dart';
 import 'screens/bio/bio_screen.dart';
 import 'services/storage/preferences_service.dart';
+import 'services/auth/auth_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'screens/greeting_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -73,7 +74,9 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _isLoading = true;
   bool _isLoggedIn = false;
-  bool _isFirstTime = true;
+  bool _hasSeenIntro =
+      true; // Default to true to be safe, but will be checked logic
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -85,20 +88,42 @@ class _AuthWrapperState extends State<AuthWrapper> {
     try {
       final prefs = await PreferencesService.getInstance();
       final isLoggedIn = prefs.isLoggedIn();
-      final isFirstTime = prefs.isFirstTimeUser();
+      final user = _authService.currentUser;
 
-      setState(() {
-        _isLoggedIn = isLoggedIn;
-        _isFirstTime = isFirstTime;
-        _isLoading = false;
-      });
+      // Check local preferences first (robust fallback)
+      bool localHasSeenIntro = !prefs.isFirstTimeUser();
+
+      bool firestoreHasSeenIntro = false;
+      if (isLoggedIn && user != null) {
+        // Try to get from Firestore (source of truth for cross-device)
+        try {
+          firestoreHasSeenIntro = await _authService.checkIfUserHasSeenIntro(
+            user.uid,
+          );
+        } catch (e) {
+          print('Firestore check failed, relying on local prefs: $e');
+        }
+      }
+
+      // If either says we've seen it, we've seen it.
+      final hasSeenIntro = localHasSeenIntro || firestoreHasSeenIntro;
+
+      if (mounted) {
+        setState(() {
+          _isLoggedIn = isLoggedIn;
+          _hasSeenIntro = hasSeenIntro;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error checking login status: $e');
-      setState(() {
-        _isLoggedIn = false;
-        _isFirstTime = true;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoggedIn = false;
+          _hasSeenIntro = true; // Fallback
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -118,8 +143,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
       return const LoginScreen();
     }
 
-    // Logged in + First time -> Home Screen (welcome screen)
-    // Logged in + Not first time -> Bio Screen (returning user)
-    return _isFirstTime ? const HomeScreen() : const BioScreen();
+    // Logged in + Not seen intro -> Greeting Screen (plays voice)
+    // Logged in + Seen intro -> Bio Screen (returning user)
+    return !_hasSeenIntro ? const GreetingScreen() : const BioScreen();
   }
 }

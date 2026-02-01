@@ -1,12 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../storage/preferences_service.dart';
+import '../external/google_sheets_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSheetsService _googleSheetsService = GoogleSheetsService();
 
   // Get current user
   User? get currentUser => _auth.currentUser;
@@ -27,13 +31,37 @@ class AuthService {
         password: password,
       );
 
-      // Save user data to SharedPreferences
+      // Save user data to SharedPreferences and ensure Firestore doc
       if (userCredential.user != null) {
+        await _ensureUserDocument(userCredential.user!); // Ensure doc exists
+
+        // Try to get phone number from Firestore since it's not in Auth for email/pass usually unless set
+        String phoneNumber = '';
+        try {
+          final userDoc = await _firestore
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .get();
+          if (userDoc.exists) {
+            phoneNumber = userDoc.data()?['phoneNumber'] ?? '';
+          }
+        } catch (e) {
+          print('Error fetching phone number: $e');
+        }
+
         final prefs = await PreferencesService.getInstance();
         await prefs.saveUserData(
           uid: userCredential.user!.uid,
           email: userCredential.user!.email ?? email,
           displayName: userCredential.user!.displayName,
+          phoneNumber: phoneNumber,
+        );
+
+        // Sync to Google Sheets
+        await _googleSheetsService.appendUserData(
+          name: userCredential.user!.displayName ?? 'Unknown',
+          email: userCredential.user!.email ?? email,
+          phone: phoneNumber,
         );
       }
 
@@ -49,6 +77,7 @@ class AuthService {
   Future<UserCredential?> signUpWithEmailPassword({
     required String email,
     required String password,
+    required String phoneNumber,
     String? displayName,
   }) async {
     try {
@@ -64,13 +93,27 @@ class AuthService {
         await userCredential.user!.reload();
       }
 
-      // Save user data to SharedPreferences
+      // Save user data to SharedPreferences and ensure Firestore doc
       if (userCredential.user != null) {
+        // Pass phone number to ensure doc
+        await _ensureUserDocument(
+          userCredential.user!,
+          phoneNumber: phoneNumber,
+        );
+
         final prefs = await PreferencesService.getInstance();
         await prefs.saveUserData(
           uid: userCredential.user!.uid,
           email: userCredential.user!.email ?? email,
           displayName: displayName ?? userCredential.user!.displayName,
+          phoneNumber: phoneNumber,
+        );
+
+        // Sync to Google Sheets
+        await _googleSheetsService.appendUserData(
+          name: displayName ?? userCredential.user!.displayName ?? 'Unknown',
+          email: userCredential.user!.email ?? email,
+          phone: phoneNumber,
         );
       }
 
@@ -158,13 +201,37 @@ class AuthService {
         credential,
       );
 
-      // Save user data to SharedPreferences
+      // Save user data to SharedPreferences and ensure Firestore doc
       if (userCredential.user != null) {
+        await _ensureUserDocument(userCredential.user!); // Ensure doc exists
+
+        // Try to get phone number from Firestore
+        String phoneNumber = '';
+        try {
+          final userDoc = await _firestore
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .get();
+          if (userDoc.exists) {
+            phoneNumber = userDoc.data()?['phoneNumber'] ?? '';
+          }
+        } catch (e) {
+          print('Error fetching phone number: $e');
+        }
+
         final prefs = await PreferencesService.getInstance();
         await prefs.saveUserData(
           uid: userCredential.user!.uid,
           email: userCredential.user!.email ?? '',
           displayName: userCredential.user!.displayName,
+          phoneNumber: phoneNumber,
+        );
+
+        // Sync to Google Sheets
+        await _googleSheetsService.appendUserData(
+          name: userCredential.user!.displayName ?? 'Unknown',
+          email: userCredential.user!.email ?? '',
+          phone: phoneNumber,
         );
       }
 
@@ -209,13 +276,37 @@ class AuthService {
         await userCredential.user?.updateDisplayName(displayName);
       }
 
-      // Save user data to SharedPreferences
+      // Save user data to SharedPreferences and ensure Firestore doc
       if (userCredential.user != null) {
+        await _ensureUserDocument(userCredential.user!); // Ensure doc exists
+
+        // Try to get phone number from Firestore
+        String phoneNumber = '';
+        try {
+          final userDoc = await _firestore
+              .collection('users')
+              .doc(userCredential.user!.uid)
+              .get();
+          if (userDoc.exists) {
+            phoneNumber = userDoc.data()?['phoneNumber'] ?? '';
+          }
+        } catch (e) {
+          print('Error fetching phone number: $e');
+        }
+
         final prefs = await PreferencesService.getInstance();
         await prefs.saveUserData(
           uid: userCredential.user!.uid,
           email: userCredential.user!.email ?? appleCredential.email ?? '',
           displayName: userCredential.user!.displayName,
+          phoneNumber: phoneNumber,
+        );
+
+        // Sync to Google Sheets
+        await _googleSheetsService.appendUserData(
+          name: userCredential.user!.displayName ?? 'Unknown',
+          email: userCredential.user!.email ?? appleCredential.email ?? '',
+          phone: phoneNumber,
         );
       }
 
@@ -251,6 +342,55 @@ class AuthService {
     } catch (e) {
       // Log error for debugging if needed
       throw 'Failed to sign out. Please try again.';
+    }
+  }
+
+  // ==================== Firestore User Profile ====================
+
+  /// Check if user has seen the intro
+  Future<bool> checkIfUserHasSeenIntro(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return doc.data()?['hasSeenIntro'] ?? false;
+      }
+      return false;
+    } catch (e) {
+      print('Error checking user intro status: $e');
+      return false;
+    }
+  }
+
+  /// Mark user as having seen the intro
+  Future<void> markUserAsSeenIntro(String uid) async {
+    try {
+      await _firestore.collection('users').doc(uid).set({
+        'hasSeenIntro': true,
+      }, SetOptions(merge: true));
+    } catch (e) {
+      print('Error marking user intro status: $e');
+    }
+  }
+
+  /// Ensure user document exists (helper)
+  Future<void> _ensureUserDocument(User user, {String? phoneNumber}) async {
+    try {
+      final docRef = _firestore.collection('users').doc(user.uid);
+      final doc = await docRef.get();
+      if (!doc.exists) {
+        await docRef.set({
+          'email': user.email,
+          'displayName': user.displayName,
+          'phoneNumber': phoneNumber ?? '',
+          'hasSeenIntro': false, // Default to false for new users
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      } else if (phoneNumber != null && phoneNumber.isNotEmpty) {
+        // Update phone number if provided and doc exists
+        await docRef.update({'phoneNumber': phoneNumber});
+      }
+    } catch (e) {
+      print('Error creating user document: $e');
     }
   }
 

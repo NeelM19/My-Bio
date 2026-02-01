@@ -11,8 +11,13 @@ import '../../services/auth/auth_service.dart';
 import '../../services/storage/preferences_service.dart';
 import '../auth/login_screen.dart';
 
+import '../../services/voice_greeting_service.dart';
+
+import '../../data/voice_scripts.dart';
+
 class BioScreen extends StatefulWidget {
-  const BioScreen({super.key});
+  final bool playVoice;
+  const BioScreen({super.key, this.playVoice = false});
 
   @override
   State<BioScreen> createState() => _BioScreenState();
@@ -22,14 +27,33 @@ class _BioScreenState extends State<BioScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   bool _isLoggingOut = false;
+  late bool _shouldPlayVoice; // Local state to control voice playback
 
   final AnalyticsService _analyticsService = AnalyticsService();
   final AuthService _authService = AuthService();
+  final VoiceGreetingService _voiceService = VoiceGreetingService();
 
   @override
   void initState() {
     super.initState();
+    _shouldPlayVoice = widget.playVoice; // Initialize from widget param
     _analyticsService.logScreenView('Bio_Intro');
+
+    // Ensure scripts are loaded just in case we landed here directly
+    // or previous screen didn't load them for some reason.
+    if (_shouldPlayVoice) {
+      // We can safely call this again, it just updates the map
+      _voiceService.prefetchAll(VoiceScripts.getAllScripts());
+      _playVoiceForPage(0);
+    }
+  }
+
+  void _playVoiceForPage(int pageIndex) {
+    if (!_shouldPlayVoice) return; // Check local state
+    // Map page index to bio script key
+    // bio_0, bio_1, etc.
+    final key = 'bio_$pageIndex';
+    _voiceService.play(key);
   }
 
   Future<void> _handleLogout() async {
@@ -62,6 +86,7 @@ class _BioScreenState extends State<BioScreen> {
 
   @override
   void dispose() {
+    _voiceService.stop(); // Stop voice when leaving
     _pageController.dispose();
     super.dispose();
   }
@@ -99,6 +124,10 @@ class _BioScreenState extends State<BioScreen> {
                       physics: const BouncingScrollPhysics(),
                       onPageChanged: (index) {
                         setState(() => _currentPage = index);
+                        // Voice Logic
+                        if (_shouldPlayVoice) {
+                          _playVoiceForPage(index);
+                        }
                         // Log analytics for page change
                         final pages = [
                           'Bio_Intro',
@@ -541,14 +570,29 @@ class _BioScreenState extends State<BioScreen> {
             ),
             const SizedBox(height: 24),
             _buildContactItem(Icons.location_on, ResumeData.location, () {}),
+            const SizedBox(height: 24),
+            _buildContactItem(
+              Icons.link,
+              "LinkedIn",
+              () => _launchUrl(ResumeData.linkedin),
+            ),
             const SizedBox(height: 48),
             NeonButton(
               text: "Restart Tour",
-              onPressed: () => _pageController.animateToPage(
-                0,
-                duration: const Duration(seconds: 1),
-                curve: Curves.easeInCirc,
-              ),
+              onPressed: () {
+                // User wants to restart navigation but NOT hear the voice again
+                // (as per request: "i do not want to play the audio now")
+                setState(() {
+                  _shouldPlayVoice = false;
+                });
+                _voiceService.stop(); // Ensure any current audio stops
+
+                _pageController.animateToPage(
+                  0,
+                  duration: const Duration(seconds: 1),
+                  curve: Curves.easeInCirc,
+                );
+              },
               baseColor: AppColors.neonPurple,
             ),
           ],

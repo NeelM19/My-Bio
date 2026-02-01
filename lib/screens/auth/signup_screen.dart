@@ -5,7 +5,8 @@ import '../../widgets/auth/custom_button.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/storage/preferences_service.dart';
 import '../../services/analytics/analytics_service.dart';
-import '../home/home_screen.dart';
+
+import '../../screens/greeting_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -17,6 +18,7 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
@@ -36,6 +38,7 @@ class _SignupScreenState extends State<SignupScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -44,11 +47,13 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _handleSignup() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
     if (name.isEmpty ||
         email.isEmpty ||
+        phone.isEmpty ||
         password.isEmpty ||
         confirmPassword.isEmpty) {
       _showError('Please fill in all fields');
@@ -57,6 +62,13 @@ class _SignupScreenState extends State<SignupScreen> {
 
     if (password != confirmPassword) {
       _showError('Passwords do not match');
+      return;
+    }
+
+    // Phone validation
+    final phoneRegex = RegExp(r'^\+?[0-9]{10,15}$');
+    if (!phoneRegex.hasMatch(phone)) {
+      _showError('Please enter a valid phone number');
       return;
     }
 
@@ -78,6 +90,7 @@ class _SignupScreenState extends State<SignupScreen> {
       await _authService.signUpWithEmailPassword(
         email: email,
         password: password,
+        phoneNumber: phone,
         displayName: name,
       );
 
@@ -100,7 +113,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => const GreetingScreen()),
       );
     }
   }
@@ -170,6 +183,14 @@ class _SignupScreenState extends State<SignupScreen> {
                   hintText: 'Email',
                   controller: _emailController,
                   icon: Icons.email_outlined,
+                ),
+                const SizedBox(height: 20),
+                // Phone field
+                CustomTextField(
+                  hintText: 'Phone Number',
+                  controller: _phoneController,
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 20),
                 // Password field

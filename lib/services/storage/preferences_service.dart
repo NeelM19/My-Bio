@@ -20,18 +20,23 @@ class PreferencesService {
   static const String _keyDisplayName = 'display_name';
   static const String _keyIsLoggedIn = 'is_logged_in';
   static const String _keyFirstTime = 'first_time_user';
+  static const String _keyPhoneNumber = 'phone_number';
 
   // Save user data
   Future<bool> saveUserData({
     required String uid,
     required String email,
     String? displayName,
+    String? phoneNumber,
   }) async {
     try {
       await _preferences?.setString(_keyUserId, uid);
       await _preferences?.setString(_keyUserEmail, email);
       if (displayName != null) {
         await _preferences?.setString(_keyDisplayName, displayName);
+      }
+      if (phoneNumber != null) {
+        await _preferences?.setString(_keyPhoneNumber, phoneNumber);
       }
       await _preferences?.setBool(_keyIsLoggedIn, true);
       return true;
@@ -56,6 +61,11 @@ class PreferencesService {
     return _preferences?.getString(_keyDisplayName);
   }
 
+  // Get phone number
+  String? getPhoneNumber() {
+    return _preferences?.getString(_keyPhoneNumber);
+  }
+
   // Check if user is logged in
   bool isLoggedIn() {
     return _preferences?.getBool(_keyIsLoggedIn) ?? false;
@@ -67,6 +77,7 @@ class PreferencesService {
       await _preferences?.remove(_keyUserId);
       await _preferences?.remove(_keyUserEmail);
       await _preferences?.remove(_keyDisplayName);
+      await _preferences?.remove(_keyPhoneNumber);
       await _preferences?.setBool(_keyIsLoggedIn, false);
       return true;
     } catch (e) {
