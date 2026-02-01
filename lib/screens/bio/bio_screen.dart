@@ -530,6 +530,35 @@ class _BioScreenState extends State<BioScreen> {
                             )
                             .toList(),
                       ),
+                      if (project.googlePlay != null ||
+                          project.appStore != null) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            if (project.googlePlay != null)
+                              _buildStoreButton(
+                                icon: Icons.android,
+                                label: "Play Store",
+                                url: project.googlePlay!,
+                                color: const Color(0xFF3DDC84),
+                                projectName: project.title,
+                                storeName: 'Play Store',
+                              ),
+                            if (project.googlePlay != null &&
+                                project.appStore != null)
+                              const SizedBox(width: 12),
+                            if (project.appStore != null)
+                              _buildStoreButton(
+                                icon: Icons.apple,
+                                label: "App Store",
+                                url: project.appStore!,
+                                color: Colors.white,
+                                projectName: project.title,
+                                storeName: 'App Store',
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ).animate().slideY(begin: 0.2, delay: (50 * index).ms).fadeIn(),
@@ -538,6 +567,50 @@ class _BioScreenState extends State<BioScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStoreButton({
+    required IconData icon,
+    required String label,
+    required String url,
+    required Color color,
+    required String projectName,
+    required String storeName,
+  }) {
+    return InkWell(
+      onTap: () {
+        _analyticsService.logEvent('store_link_clicked', {
+          'project_name': projectName,
+          'store_platform': storeName,
+          'url': url,
+        });
+        _launchUrl(url);
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: color.withOpacity(0.5)),
+          borderRadius: BorderRadius.circular(8),
+          color: color.withOpacity(0.1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.exo2(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

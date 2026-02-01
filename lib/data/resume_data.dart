@@ -93,6 +93,8 @@ class ResumeData {
       description:
           "Personalized AI-driven diet plan app with multi-language support. Delivered personalized diet plan functionality, increasing user engagement by 40%.",
       tools: ["Flutter", "Dart", "Flutterflow"],
+      googlePlay:
+          "https://play.google.com/store/apps/details?id=com.pulse.workout&hl=en",
     ),
     Project(
       title: "Amour AI",
@@ -105,18 +107,27 @@ class ResumeData {
       description:
           "A app were user can add the beneficiary for their owning’s. Integrated secure messaging service to send a message.",
       tools: ["Flutter", "Dart", "Flutterflow"],
+      googlePlay:
+          "https://play.google.com/store/apps/details?id=com.b4igo_mobile&hl=en",
+      appStore: "https://apps.apple.com/in/app/b4igo/id6751222879",
     ),
     Project(
       title: "Infinaeon",
       description:
           "A blockchain app were user can buy, sell or swap the tokens. Integrated the dApp browser were user connect with different website.",
       tools: ["Flutter", "Dart"],
+      googlePlay:
+          "https://play.google.com/store/apps/details?id=com.infinaeon.wallet&hl=en",
+      appStore: "https://apps.apple.com/in/app/infinaeon/id6744882809",
     ),
     Project(
       title: "Dive Wallet",
       description:
           "A blockchain app were user can buy, sell or swap the tokens. Integrated the dApp browser were user connect with different website.",
       tools: ["Flutter", "Dart"],
+      googlePlay:
+          "https://play.google.com/store/apps/details?id=com.dive.wallet&hl=en",
+      appStore: "https://apps.apple.com/in/app/divewallet/id6444395828",
     ),
     Project(
       title: "Comuna",
@@ -129,12 +140,16 @@ class ResumeData {
       description:
           "Social/dating + professional networking hybrid app. Enabled real-time communication and event updates.",
       tools: ["Flutter", "Dart"],
+      googlePlay:
+          "https://play.google.com/store/apps/details?id=com.geloapp.gelo&hl=en",
     ),
     Project(
       title: "Botree-sfa",
       description:
           "Multi-user enterprise app with local database integration for offline support.",
       tools: ["Flutter", "Dart"],
+      googlePlay:
+          "https://play.google.com/store/apps/details?id=com.botree.mobilitysfa.botreesfa&hl=en",
     ),
     Project(
       title: "Asset Management",
@@ -147,12 +162,18 @@ class ResumeData {
       description:
           "Competition management app with chat, profiles, and networking features. Integrated with email and otp features for the app.",
       tools: ["Flutter", "Dart"],
+      googlePlay:
+          "https://play.google.com/store/apps/details?id=com.sfl.is.dreamteamcompete&hl=en",
+      appStore: "https://apps.apple.com/in/app/dream-team-compete/id6451382737",
     ),
     Project(
       title: "Cape County Health",
       description:
           "Healthcare app with event updates and emergency communication.",
       tools: ["Flutter", "Dart"],
+      googlePlay:
+          "https://play.google.com/store/apps/details?id=com.sfl.is.capecountyhealth&hl=en",
+      appStore: "https://apps.apple.com/in/app/cape-county-health/id6473919427",
     ),
     Project(
       title: "Claygoo",
@@ -264,10 +285,14 @@ class Project {
   final String title;
   final String description;
   final List<String> tools;
+  final String? googlePlay;
+  final String? appStore;
 
   const Project({
     required this.title,
     required this.description,
     required this.tools,
+    this.googlePlay,
+    this.appStore,
   });
 }
