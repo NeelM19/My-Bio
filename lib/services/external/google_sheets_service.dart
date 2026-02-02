@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -23,16 +22,10 @@ class GoogleSheetsService {
         return false;
       }
 
+      // Use form data (application/x-www-form-urlencoded) to avoid CORS preflight issues on Web
       final response = await http.post(
         Uri.parse(apiUrl),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'name': name,
-          'email': email,
-          'phone': phone,
-        }),
+        body: <String, String>{'name': name, 'email': email, 'phone': phone},
       );
 
       if (response.statusCode == 200 || response.statusCode == 302) {

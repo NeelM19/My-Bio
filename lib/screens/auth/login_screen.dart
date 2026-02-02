@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../widgets/auth/custom_text_field.dart';
@@ -248,47 +249,49 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
-                  // OR divider
-                  _buildOrDivider(),
-                  const SizedBox(height: 30),
-                  // Social login buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _isGoogleLoading
-                          ? const SizedBox(
-                              width: 80,
-                              height: 80,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.gradientStart,
+                  if (!kIsWeb) ...[
+                    const SizedBox(height: 30),
+                    // OR divider
+                    _buildOrDivider(),
+                    const SizedBox(height: 30),
+                    // Social login buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _isGoogleLoading
+                            ? const SizedBox(
+                                width: 80,
+                                height: 80,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.gradientStart,
+                                  ),
                                 ),
+                              )
+                            : SocialLoginButton(
+                                icon: Icons.g_mobiledata,
+                                label: 'Sign in with\nGoogle',
+                                onPressed: _handleGoogleSignIn,
                               ),
-                            )
-                          : SocialLoginButton(
-                              icon: Icons.g_mobiledata,
-                              label: 'Sign in with\nGoogle',
-                              onPressed: _handleGoogleSignIn,
-                            ),
-                      const SizedBox(width: 40),
-                      _isAppleLoading
-                          ? const SizedBox(
-                              width: 80,
-                              height: 80,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.gradientStart,
+                        const SizedBox(width: 40),
+                        _isAppleLoading
+                            ? const SizedBox(
+                                width: 80,
+                                height: 80,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.gradientStart,
+                                  ),
                                 ),
+                              )
+                            : SocialLoginButton(
+                                icon: Icons.apple,
+                                label: 'Sign in with\nApple',
+                                onPressed: _handleAppleSignIn,
                               ),
-                            )
-                          : SocialLoginButton(
-                              icon: Icons.apple,
-                              label: 'Sign in with\nApple',
-                              onPressed: _handleAppleSignIn,
-                            ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: 40),
                   // Sign Up Link
                   Row(

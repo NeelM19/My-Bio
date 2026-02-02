@@ -19,31 +19,51 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    await dotenv.load(); // Check if .env is loaded
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  // Crashlytics: record uncaught Flutter errors
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
-  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+    // Crashlytics: record uncaught Flutter errors
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+    // await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true); // Disable for debugging if needed
 
-  // Messaging: background handler and request permission / token
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
-  print('User granted permission: ${settings.authorizationStatus}');
-  String? token = await messaging.getToken();
-  print('FCM token: $token');
+    // Messaging: background handler and request permission / token
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    print('User granted permission: ${settings.authorizationStatus}');
 
-  // Analytics: log app_open
-  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  await analytics.logEvent(name: 'main');
+    // getToken can hang on web if VAPID key is missing or SW is not ready.
+    // We wrap it in a timeout to ensure app startup doesn't block indefinitely.
+    String? token;
+    try {
+      token = await messaging
+          .getToken(
+            vapidKey:
+                "BMk6LKmPsRohBu7IefAY-Co8flUg6adE8xII3euZeIsiJfThr7MtylGxAfZwcK38r3TsyW6-foeRq06S2IjQGwk",
+          )
+          .timeout(const Duration(seconds: 10));
+      print('FCM token: $token');
+    } catch (e) {
+      print('Warning: Failed to get FCM token: $e');
+    }
 
-  runApp(const MyApp());
+    // Analytics: log app_open
+    FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+    await analytics.logEvent(name: 'main');
+
+    runApp(const MyApp());
+  } catch (e, stack) {
+    print('Error during initialization: $e');
+    print(stack);
+  }
 }
 
 class MyApp extends StatelessWidget {
