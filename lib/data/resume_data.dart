@@ -29,6 +29,7 @@ class ResumeData {
         "Enhanced user experience through efficient UI/UX designs and optimized code performance.",
         "Implemented the alarm feature in the app.",
         "Implemented new features and functionalities based on client requirements.",
+        "Implemented the dynamic Quick Action's feature in the app.",
       ],
     ),
     Experience(
@@ -77,16 +78,18 @@ class ResumeData {
 
   static const List<Project> projects = [
     Project(
-      title: "SecureForce",
+      title: "EasyPagar - Kavach",
       description:
           "Platform for creating and managing the security guards of all the client in a real time. In this app we can add the security guards and assign them to the client. We can also track the location of the security guards in a real time.",
       tools: ["Flutter", "Dart"],
+      googlePlay: "https://play.google.com/store/apps/details?id=com.wbtech.kavach.easypagar",
     ),
     Project(
       title: "Eardrum AI",
       description:
           "Platform for creating and streaming podcasts powered by AI. Built core features enabling users to record, edit, and publish podcasts seamlessly.",
       tools: ["Flutter", "Dart", "Flutterflow"],
+      appStore: "https://apps.apple.com/in/app/eardrum-ai/id6751574134",
     ),
     Project(
       title: "Pulse AI",
@@ -134,6 +137,7 @@ class ResumeData {
       description:
           "Community app for apartment residents to connect and share updates. Enabled real-time communication and event updates, used by 500+ residents.",
       tools: ["Flutter", "Dart"],
+      appStore: "https://apps.apple.com/in/app/my-comuna/id6749212698",
     ),
     Project(
       title: "Gelo",
@@ -142,6 +146,7 @@ class ResumeData {
       tools: ["Flutter", "Dart"],
       googlePlay:
           "https://play.google.com/store/apps/details?id=com.geloapp.gelo&hl=en",
+      appStore: "https://apps.apple.com/in/app/gelo/id6747113666",
     ),
     Project(
       title: "Botree-sfa",
