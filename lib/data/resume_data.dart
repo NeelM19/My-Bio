@@ -83,6 +83,7 @@ class ResumeData {
           "Platform for creating and managing the security guards of all the client in a real time. In this app we can add the security guards and assign them to the client. We can also track the location of the security guards in a real time.",
       tools: ["Flutter", "Dart"],
       googlePlay: "https://play.google.com/store/apps/details?id=com.wbtech.kavach.easypagar",
+      appStore: "https://apps.apple.com/in/app/easypagar-kavach/id6761885302",
     ),
     Project(
       title: "Eardrum AI",
